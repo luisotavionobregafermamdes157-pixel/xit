@@ -10,221 +10,160 @@ import android.view.View
 import android.widget.*
 import android.os.Build
 import android.app.ActivityManager
-import java.io.File
 
 class MainActivity : Activity() {
-    private val bg = Color.rgb(7, 7, 12)
-    private val panel = Color.rgb(19, 17, 27)
-    private val red = Color.rgb(255, 35, 78)
-    private val blue = Color.rgb(177, 62, 255)
-    private lateinit var rootLayout: LinearLayout
-    private val handler = android.os.Handler()
+    private val black = Color.rgb(17,17,17)
+    private val red = Color.rgb(255,0,0)
+    private val dark = Color.rgb(35,35,35)
+    private val white = Color.WHITE
+    private lateinit var body: LinearLayout
+    private lateinit var tabRow: LinearLayout
+    private var currentTab = "SENSI"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        showHome()
+        window.statusBarColor = red
+        window.navigationBarColor = black
+        showPanel()
     }
 
-    private fun showHome() {
-        rootLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(bg)
-            setPadding(dp(18), dp(22), dp(18), dp(18))
+    private fun showPanel() {
+        val page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(black) }
+        val top = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            setBackgroundColor(red); setPadding(dp(8), 0, dp(8), 0)
         }
+        val arrow = TextView(this).apply { text = "▾"; textSize = 22f; setTextColor(white); gravity = Gravity.CENTER }
+        top.addView(arrow, LinearLayout.LayoutParams(dp(28), dp(34)))
+        val title = TextView(this).apply { text = "Uriel Xiter Android 1.108.X"; textSize = 16f; setTextColor(white); gravity = Gravity.CENTER }
+        top.addView(title, LinearLayout.LayoutParams(0, dp(34), 1f))
+        val close = TextView(this).apply { text = "×"; textSize = 30f; setTextColor(white); gravity = Gravity.CENTER }
+        top.addView(close, LinearLayout.LayoutParams(dp(28), dp(34)))
+        page.addView(top)
+        tabRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setBackgroundColor(black); setPadding(dp(8), dp(8), dp(8), 0) }
+        page.addView(tabRow)
+        val underline = View(this).apply { setBackgroundColor(red) }
+        page.addView(underline, LinearLayout.LayoutParams(-1, dp(3)))
         val scroll = ScrollView(this)
-        scroll.addView(rootLayout)
-        setContentView(scroll)
-        text(rootLayout, "PMT FF PRO", 30, Color.WHITE, true)
-        text(rootLayout, "XIT STYLE  •  FREE FIRE TOOLS  •  ANDROID", 11, blue, true)
-        space(rootLayout, 8)
-        text(rootLayout, "DOMINA A TUA CONFIGURAÇÃO", 20, Color.WHITE, true)
-        text(rootLayout, "Painel gamer inspirado no estilo Xit, com ferramentas independentes.", 13, Color.LTGRAY, false)
-        space(rootLayout, 16)
-        val status = TextView(this).apply {
-            text = "●  PAINEL PRONTO"
-            textSize = 11f
-            setTextColor(Color.rgb(58, 214, 151))
-            setPadding(dp(12), dp(9), dp(12), dp(9))
-            setBackgroundColor(Color.rgb(17, 49, 43))
-        }
-        rootLayout.addView(status, matchWrap())
-        space(rootLayout, 16)
-
-        val nav = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        rootLayout.addView(nav)
-        button(nav, "⌂ INÍCIO", red) { showHome() }
-        button(nav, "◈ SENSI", blue) { showSensitivity() }
-        button(nav, "◎ TREINO", red) { showTraining() }
-
-        space(rootLayout, 18)
-        section("RESUMO DO DISPOSITIVO")
-        card("Dispositivo: ${Build.MANUFACTURER} ${Build.MODEL}\nAndroid ${Build.VERSION.RELEASE} • API ${Build.VERSION.SDK_INT}")
-        card("Root: ${if (hasRoot()) "Possível root detetado" else "Não detetado"} (deteção não conclusiva)")
-        card(memorySummary())
-        card("FPS: indisponível para leitura universal de outro jogo através de APIs públicas")
-        space(rootLayout, 12)
-        section("FERRAMENTAS")
-        actionCard("🎚  Sensibilidade personalizada", "Seis controlos ajustáveis e perfis guardados no telemóvel") { showSensitivity() }
-        actionCard("🎯  Treino de mira", "Mini-jogo independente com pontuação e cronómetro") { showTraining() }
-        actionCard("⚡  Diagnóstico de desempenho", "RAM do dispositivo e dicas para reduzir travamentos") { showDiagnostics() }
-        actionCard("🛡  Segurança e compatibilidade", "Verificação básica de root e informações do painel") { showSecurity() }
-        space(rootLayout, 14)
-        text(rootLayout, "Nota: não injeta código nem altera o Free Fire. O FPS interno de outro jogo não está disponível por APIs públicas universais.", 12, Color.GRAY, false)
+        body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(2), dp(4), dp(2), dp(12)); setBackgroundColor(black) }
+        scroll.addView(body)
+        page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        setContentView(page)
+        buildTabs()
+        showTab(currentTab)
     }
 
-    private fun showSensitivity() {
-        screen("SENSIBILIDADE") { col ->
-            text(col, "Valores de referência para configurar manualmente no jogo.", 14, Color.LTGRAY, false)
-            val prefs = getSharedPreferences("profiles", Context.MODE_PRIVATE)
-            val names = listOf("Geral", "Ponto vermelho", "Mira 2x", "Mira 4x", "AWM", "Olhar livre")
-            names.forEachIndexed { idx, name ->
-                val row = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(dp(12), dp(8), dp(12), dp(8))
-                    setBackgroundColor(panel)
-                }
-                col.addView(row, matchWrap())
-                val label = text(row, "$name: ${prefs.getInt("s$idx", 70)}", 15, Color.WHITE, true)
-                val seek = SeekBar(this).apply {
-                    max = 100
-                    progress = prefs.getInt("s$idx", 70)
-                    progressTintList = android.content.res.ColorStateList.valueOf(red)
-                    thumbTintList = android.content.res.ColorStateList.valueOf(blue)
-                }
-                row.addView(seek)
-                seek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(s: SeekBar?, p: Int, user: Boolean) { label.text = "$name: $p" }
+    private fun buildTabs() {
+        tabRow.removeAllViews()
+        listOf("✥ Sensi", "◉ HUD", "⚙ Misc", "▣ Info").forEachIndexed { i, label ->
+            val name = listOf("SENSI", "HUD", "MISC", "INFO")[i]
+            val b = TextView(this).apply {
+                text = label; textSize = 14f; setTextColor(white); gravity = Gravity.CENTER
+                setPadding(dp(8), dp(7), dp(8), dp(7))
+                setBackgroundColor(if (currentTab == name) red else Color.rgb(45,0,0))
+            }
+            tabRow.addView(b, LinearLayout.LayoutParams(0, dp(34), 1f).apply { rightMargin = dp(5) })
+            b.setOnClickListener { currentTab = name; buildTabs(); showTab(name) }
+        }
+    }
+
+    private fun showTab(tab: String) {
+        body.removeAllViews()
+        when(tab) {
+            "SENSI" -> {
+                check("Ativar perfil de sensibilidade")
+                check("Modo de sensibilidade leve")
+                check("Mostrar guia de configuração")
+                divider()
+                check("Exibir referência de FOV (apenas guia)")
+                val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+                val seek = SeekBar(this).apply { max = 100; progress = prefs().getInt("fov", 0); progressTintList = android.content.res.ColorStateList.valueOf(red); thumbTintList = android.content.res.ColorStateList.valueOf(red) }
+                row.addView(seek, LinearLayout.LayoutParams(0, dp(34), 1f))
+                val value = TextView(this).apply { text = seek.progress.toString(); textSize = 16f; setTextColor(white); gravity = Gravity.CENTER; minWidth = dp(34) }
+                row.addView(value)
+                body.addView(row, match())
+                seek.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(s: SeekBar?, p: Int, fromUser: Boolean) { value.text = p.toString(); if(fromUser) prefs().edit().putInt("fov",p).apply() }
                     override fun onStartTrackingTouch(s: SeekBar?) {}
-                    override fun onStopTrackingTouch(s: SeekBar?) { prefs.edit().putInt("s$idx", s?.progress ?: 70).apply() }
+                    override fun onStopTrackingTouch(s: SeekBar?) {}
                 })
-                space(col, 8)
+                val line = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+                val spinner = Spinner(this).apply { adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, listOf("Padrão", "Ecrã pequeno", "Ecrã grande")) }
+                line.addView(spinner, LinearLayout.LayoutParams(dp(190), dp(38)))
+                label(line, "Perfil", 14)
+                body.addView(line, match())
+                divider()
+                label(body, "Tipo de configuração", 16)
+                check("Ao jogar (aplicar manualmente nas definições)")
+                button("Guardar perfil") { Toast.makeText(this, "Perfil guardado neste dispositivo", Toast.LENGTH_SHORT).show() }
             }
-            button(col, "PERFIL ECRÃ PEQUENO", blue) {
-                listOf(92, 88, 82, 76, 45, 80).forEachIndexed { i, v -> prefs.edit().putInt("s$i", v).apply() }
-                Toast.makeText(this, "Perfil guardado. Reabre esta página para ver os valores.", Toast.LENGTH_LONG).show()
+            "HUD" -> {
+                label(body, "Configuração de HUD", 16)
+                check("Mostrar guia de posição dos botões")
+                check("Botão de disparo à direita")
+                check("Controlos de movimento à esquerda")
+                divider()
+                label(body, "Tamanho dos controlos", 14)
+                slider("Tamanho HUD", 50)
+                slider("Transparência HUD", 80)
+                button("Guardar HUD") { Toast.makeText(this, "Preferências guardadas; ajusta o HUD dentro do jogo", Toast.LENGTH_SHORT).show() }
             }
-            button(col, "PERFIL ECRÃ GRANDE", red) {
-                listOf(85, 80, 75, 68, 40, 72).forEachIndexed { i, v -> prefs.edit().putInt("s$i", v).apply() }
-                Toast.makeText(this, "Perfil guardado.", Toast.LENGTH_SHORT).show()
-                showSensitivity()
+            "MISC" -> {
+                label(body, "Ferramentas do dispositivo", 16)
+                check("Ativar dicas de desempenho")
+                check("Mostrar lembretes de aquecimento")
+                check("Reduzir animações deste painel")
+                divider()
+                label(body, "Recomendações", 14)
+                label(body, "Fecha aplicações em segundo plano e reduz a qualidade gráfica no próprio jogo se houver travamentos.", 13)
             }
-            button(col, "REPOR VALORES PADRÃO", blue) {
-                listOf(70, 70, 70, 70, 50, 70).forEachIndexed { i, v -> prefs.edit().putInt("s$i", v).apply() }
-                Toast.makeText(this, "Valores padrão guardados.", Toast.LENGTH_SHORT).show()
-                showSensitivity()
-            }
-        }
-    }
-
-    private fun showTraining() {
-        screen("TREINO DE PRECISÃO") { col ->
-            text(col, "Treino independente; não interage com o Free Fire.", 14, Color.LTGRAY, false)
-            val score = text(col, "Pontuação: 0", 20, Color.WHITE, true)
-            val time = text(col, "Tempo: 30 s", 16, blue, true)
-            val arena = FrameLayout(this).apply { setBackgroundColor(Color.rgb(14, 18, 29)) }
-            col.addView(arena, LinearLayout.LayoutParams(-1, dp(330)))
-            var points = 0
-            var remaining = 30
-            var active = false
-            val target = Button(this).apply { text = "●"; textSize = 28f; setTextColor(Color.WHITE); setBackgroundTintList(android.content.res.ColorStateList.valueOf(red)) }
-            arena.addView(target, FrameLayout.LayoutParams(dp(64), dp(64)).apply { gravity = Gravity.TOP or Gravity.START; leftMargin = dp(80); topMargin = dp(70) })
-            fun moveTarget() {
-                val maxX = (arena.width - dp(70)).coerceAtLeast(0)
-                val maxY = (arena.height - dp(70)).coerceAtLeast(0)
-                target.x = (Math.random() * maxX).toFloat()
-                target.y = (Math.random() * maxY).toFloat()
-            }
-            target.setOnClickListener { if (active) { points++; score.text = "Pontuação: $points"; moveTarget() } }
-            button(col, "INICIAR TREINO (30 S)", red) {
-                points = 0; remaining = 30; active = true
-                score.text = "Pontuação: 0"
-                val tick = object : Runnable {
-                    override fun run() {
-                        if (!active) return
-                        time.text = "Tempo: $remaining s"
-                        if (remaining <= 0) {
-                            active = false
-                            Toast.makeText(this@MainActivity, "Treino terminado: $points acertos", Toast.LENGTH_LONG).show()
-                        } else { remaining--; handler.postDelayed(this, 1000) }
-                    }
-                }
-                handler.post(tick)
-                moveTarget()
+            "INFO" -> {
+                label(body, "Informações", 16)
+                label(body, "PMT FF PRO • Free Fire Tools", 14)
+                divider()
+                label(body, "Dispositivo: ${Build.MANUFACTURER} ${Build.MODEL}", 14)
+                label(body, "Android ${Build.VERSION.RELEASE} • API ${Build.VERSION.SDK_INT}", 14)
+                val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+                val mi = ActivityManager.MemoryInfo(); am.getMemoryInfo(mi)
+                label(body, "RAM disponível: ${mi.availMem/(1024*1024)} MB", 14)
+                divider()
+                label(body, "Este painel guarda preferências e apresenta guias. Não injeta código nem altera o Free Fire.", 13)
             }
         }
     }
 
-    private fun showDiagnostics() {
-        screen("DIAGNÓSTICO") { col ->
-            text(col, "Android ${Build.VERSION.RELEASE} • ${Build.MODEL}", 15, Color.WHITE, false)
-            space(col, 10)
-            text(col, memorySummary(), 15, Color.WHITE, false)
-            space(col, 12)
-            text(col, "RECOMENDAÇÕES", 13, blue, true)
-            listOf(
-                "Fecha aplicações que não estás a utilizar.",
-                "Mantém espaço livre no armazenamento.",
-                "Reduz a qualidade gráfica se houver travamentos.",
-                "Evita jogar enquanto o dispositivo está muito quente.",
-                "Usa o modo de desempenho do fabricante, se existir."
-            ).forEach { card("• $it") }
-            text(col, "Não é possível ler o FPS interno de outro jogo universalmente.", 12, Color.GRAY, false)
+    private fun check(textValue: String) {
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(8), dp(3), dp(6), dp(3)) }
+        val cb = CheckBox(this).apply {
+            text = textValue; textSize = 16f; setTextColor(white); buttonTintList = android.content.res.ColorStateList.valueOf(red)
+            isChecked = prefs().getBoolean("check_$textValue", false)
         }
+        cb.setOnCheckedChangeListener { _, checked -> prefs().edit().putBoolean("check_$textValue", checked).apply() }
+        row.addView(cb, match())
+        body.addView(row, match())
     }
 
-    private fun screen(title: String, content: (LinearLayout) -> Unit) {
-        val scroll = ScrollView(this)
-        val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(18), dp(22), dp(18), dp(18)); setBackgroundColor(bg) }
-        scroll.addView(col); setContentView(scroll)
-        text(col, "PMT FF PRO", 27, Color.WHITE, true)
-        text(col, title, 14, blue, true)
-        space(col, 16)
-        button(col, "← VOLTAR AO INÍCIO", red) { showHome() }
-        space(col, 12)
-        content(col)
+    private fun slider(title: String, initial: Int) {
+        label(body, title, 14)
+        val seek = SeekBar(this).apply { max = 100; progress = prefs().getInt(title, initial); progressTintList = android.content.res.ColorStateList.valueOf(red); thumbTintList = android.content.res.ColorStateList.valueOf(red) }
+        body.addView(seek, match())
+        seek.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(s: SeekBar?, p: Int, fromUser: Boolean) { if(fromUser) prefs().edit().putInt(title,p).apply() }
+            override fun onStartTrackingTouch(s: SeekBar?) {}
+            override fun onStopTrackingTouch(s: SeekBar?) {}
+        })
     }
 
-    private fun showSecurity() {
-        screen("SEGURANÇA") { col ->
-            text(col, if (hasRoot()) "ROOT: possível root detetado" else "ROOT: root não detetado", 16, Color.WHITE, true)
-            space(col, 10)
-            text(col, "O painel funciona sem root. A verificação é básica e pode não detetar todos os métodos.", 13, Color.LTGRAY, false)
-            space(col, 10)
-            text(col, "Não inclui aimbot, wallhack, mod menu, bypass ou injeção. Usa as definições permitidas pelo próprio jogo.", 13, Color.WHITE, false)
-        }
+    private fun label(parent: LinearLayout, value: String, size: Int) {
+        val t = TextView(this).apply { text = value; textSize = size.toFloat(); setTextColor(white); setPadding(dp(8), dp(5), dp(6), dp(5)) }
+        parent.addView(t, match())
     }
-
-    private fun memorySummary(): String {
-        val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager
-        val mi = ActivityManager.MemoryInfo()
-        am.getMemoryInfo(mi)
-        return "RAM disponível: ${mi.availMem / (1024 * 1024)} MB de ${mi.totalMem / (1024 * 1024)} MB"
+    private fun divider() { body.addView(View(this).apply { setBackgroundColor(Color.rgb(160,0,0)) }, LinearLayout.LayoutParams(-1, dp(1)).apply { topMargin = dp(4); bottomMargin = dp(5) }) }
+    private fun button(title: String, action: () -> Unit) {
+        val b = Button(this).apply { text = title; textSize = 13f; setTextColor(white); setBackgroundTintList(android.content.res.ColorStateList.valueOf(red)) }
+        body.addView(b, match()); b.setOnClickListener { action() }
     }
-
-    private fun hasRoot(): Boolean =
-        arrayOf("/system/bin/su", "/system/xbin/su", "/sbin/su", "/system/app/Superuser.apk").any { File(it).exists() }
-
-    private fun section(title: String) { text(rootLayout, title, 13, blue, true); space(rootLayout, 8) }
-    private fun card(value: String) {
-        val t = text(rootLayout, value, 14, Color.WHITE, false)
-        t.setPadding(dp(14), dp(13), dp(14), dp(13)); t.setBackgroundColor(panel); space(rootLayout, 7)
-    }
-    private fun actionCard(title: String, subtitle: String, action: () -> Unit) {
-        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(12), dp(14), dp(12)); setBackgroundColor(panel); isClickable = true; isFocusable = true }
-        rootLayout.addView(box, matchWrap())
-        text(box, title, 16, Color.WHITE, true); text(box, subtitle, 12, Color.LTGRAY, false)
-        box.setOnClickListener { action() }; space(rootLayout, 8)
-    }
-    private fun text(parent: LinearLayout, value: String, size: Int, color: Int, bold: Boolean): TextView {
-        val v = TextView(this).apply { text = value; textSize = size.toFloat(); setTextColor(color); if (bold) setTypeface(typeface, Typeface.BOLD) }
-        parent.addView(v, matchWrap()); return v
-    }
-    private fun button(parent: LinearLayout, label: String, color: Int, action: () -> Unit) {
-        val b = Button(this).apply { text = label; setTextColor(Color.WHITE); setBackgroundTintList(android.content.res.ColorStateList.valueOf(color)); textSize = 12f }
-        parent.addView(b, LinearLayout.LayoutParams(if (parent.orientation == LinearLayout.HORIZONTAL) 0 else -1, dp(48)).apply { if (parent.orientation == LinearLayout.HORIZONTAL) weight = 1f else bottomMargin = dp(6) })
-        b.setOnClickListener { action() }
-    }
-    private fun space(parent: LinearLayout, height: Int) { parent.addView(View(this), LinearLayout.LayoutParams(1, dp(height))) }
-    private fun matchWrap() = LinearLayout.LayoutParams(-1, -2)
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+    private fun prefs() = getSharedPreferences("pmt_profile", Context.MODE_PRIVATE)
+    private fun match() = LinearLayout.LayoutParams(-1, -2)
+    private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 }
