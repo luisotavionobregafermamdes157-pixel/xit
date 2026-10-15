@@ -34,9 +34,21 @@ class MainActivity : Activity() {
         val scroll = ScrollView(this)
         scroll.addView(rootLayout)
         setContentView(scroll)
-        text(rootLayout, "PMT FF PRO", 28, Color.WHITE, true)
-        text(rootLayout, "GAMING TOOLS  •  ANDROID", 12, blue, true)
-        space(rootLayout, 18)
+        text(rootLayout, "PMT FF PRO", 30, Color.WHITE, true)
+        text(rootLayout, "GAMING CONTROL CENTER  •  ANDROID", 11, blue, true)
+        space(rootLayout, 8)
+        text(rootLayout, "Ajusta. Treina. Melhora.", 22, Color.WHITE, true)
+        text(rootLayout, "Ferramentas independentes para personalizar a tua experiência.", 13, Color.LTGRAY, false)
+        space(rootLayout, 16)
+        val status = TextView(this).apply {
+            text = "●  PAINEL PRONTO"
+            textSize = 11f
+            setTextColor(Color.rgb(58, 214, 151))
+            setPadding(dp(12), dp(9), dp(12), dp(9))
+            setBackgroundColor(Color.rgb(17, 49, 43))
+        }
+        rootLayout.addView(status, matchWrap())
+        space(rootLayout, 16)
 
         val nav = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         rootLayout.addView(nav)
@@ -45,18 +57,19 @@ class MainActivity : Activity() {
         button(nav, "TREINO", red) { showTraining() }
 
         space(rootLayout, 18)
-        section("ESTADO DO DISPOSITIVO")
+        section("RESUMO DO DISPOSITIVO")
         card("Dispositivo: ${Build.MANUFACTURER} ${Build.MODEL}\nAndroid ${Build.VERSION.RELEASE} • API ${Build.VERSION.SDK_INT}")
         card("Root: ${if (hasRoot()) "Possível root detetado" else "Não detetado"} (deteção não conclusiva)")
         card(memorySummary())
         card("FPS: indisponível para leitura universal de outro jogo através de APIs públicas")
         space(rootLayout, 12)
         section("FERRAMENTAS")
-        actionCard("Sensibilidade personalizada", "Perfis guardados localmente") { showSensitivity() }
-        actionCard("Treino de mira independente", "Alvos e temporizador de 30 segundos") { showTraining() }
-        actionCard("Diagnóstico de desempenho", "Informações e recomendações") { showDiagnostics() }
+        actionCard("🎚  Sensibilidade personalizada", "Seis controlos ajustáveis e perfis guardados no telemóvel") { showSensitivity() }
+        actionCard("🎯  Treino de mira", "Mini-jogo independente com pontuação e cronómetro") { showTraining() }
+        actionCard("⚡  Diagnóstico de desempenho", "RAM do dispositivo e dicas para reduzir travamentos") { showDiagnostics() }
+        actionCard("🛡  Segurança e compatibilidade", "Verificação básica de root e informações do painel") { showSecurity() }
         space(rootLayout, 14)
-        text(rootLayout, "Não injeta código nem altera ficheiros do Free Fire.", 12, Color.GRAY, false)
+        text(rootLayout, "Nota: não injeta código nem altera o Free Fire. O FPS interno de outro jogo não está disponível por APIs públicas universais.", 12, Color.GRAY, false)
     }
 
     private fun showSensitivity() {
@@ -92,7 +105,13 @@ class MainActivity : Activity() {
             }
             button(col, "PERFIL ECRÃ GRANDE", red) {
                 listOf(85, 80, 75, 68, 40, 72).forEachIndexed { i, v -> prefs.edit().putInt("s$i", v).apply() }
-                Toast.makeText(this, "Perfil guardado. Reabre esta página para ver os valores.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Perfil guardado.", Toast.LENGTH_SHORT).show()
+                showSensitivity()
+            }
+            button(col, "REPOR VALORES PADRÃO", blue) {
+                listOf(70, 70, 70, 70, 50, 70).forEachIndexed { i, v -> prefs.edit().putInt("s$i", v).apply() }
+                Toast.makeText(this, "Valores padrão guardados.", Toast.LENGTH_SHORT).show()
+                showSensitivity()
             }
         }
     }
@@ -163,6 +182,16 @@ class MainActivity : Activity() {
         button(col, "← VOLTAR AO INÍCIO", red) { showHome() }
         space(col, 12)
         content(col)
+    }
+
+    private fun showSecurity() {
+        screen("SEGURANÇA") { col ->
+            text(col, if (hasRoot()) "ROOT: possível root detetado" else "ROOT: root não detetado", 16, Color.WHITE, true)
+            space(col, 10)
+            text(col, "O painel funciona sem root. A verificação é básica e pode não detetar todos os métodos.", 13, Color.LTGRAY, false)
+            space(col, 10)
+            text(col, "Não inclui aimbot, wallhack, mod menu, bypass ou injeção. Usa as definições permitidas pelo próprio jogo.", 13, Color.WHITE, false)
+        }
     }
 
     private fun memorySummary(): String {
