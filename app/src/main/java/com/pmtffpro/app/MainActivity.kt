@@ -13,10 +13,10 @@ import android.app.ActivityManager
 import java.io.File
 
 class MainActivity : Activity() {
-    private val bg = Color.rgb(9, 11, 18)
-    private val panel = Color.rgb(20, 24, 36)
-    private val red = Color.rgb(255, 48, 79)
-    private val blue = Color.rgb(53, 145, 255)
+    private val bg = Color.rgb(7, 7, 12)
+    private val panel = Color.rgb(19, 17, 27)
+    private val red = Color.rgb(255, 35, 78)
+    private val blue = Color.rgb(177, 62, 255)
     private lateinit var rootLayout: LinearLayout
     private val handler = android.os.Handler()
 
@@ -35,10 +35,10 @@ class MainActivity : Activity() {
         scroll.addView(rootLayout)
         setContentView(scroll)
         text(rootLayout, "PMT FF PRO", 30, Color.WHITE, true)
-        text(rootLayout, "GAMING CONTROL CENTER  •  ANDROID", 11, blue, true)
+        text(rootLayout, "XIT STYLE  •  FREE FIRE TOOLS  •  ANDROID", 11, blue, true)
         space(rootLayout, 8)
-        text(rootLayout, "Ajusta. Treina. Melhora.", 22, Color.WHITE, true)
-        text(rootLayout, "Ferramentas independentes para personalizar a tua experiência.", 13, Color.LTGRAY, false)
+        text(rootLayout, "DOMINA A TUA CONFIGURAÇÃO", 20, Color.WHITE, true)
+        text(rootLayout, "Painel gamer inspirado no estilo Xit, com ferramentas independentes.", 13, Color.LTGRAY, false)
         space(rootLayout, 16)
         val status = TextView(this).apply {
             text = "●  PAINEL PRONTO"
@@ -52,9 +52,9 @@ class MainActivity : Activity() {
 
         val nav = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         rootLayout.addView(nav)
-        button(nav, "INÍCIO", red) { showHome() }
-        button(nav, "SENSI", blue) { showSensitivity() }
-        button(nav, "TREINO", red) { showTraining() }
+        button(nav, "⌂ INÍCIO", red) { showHome() }
+        button(nav, "◈ SENSI", blue) { showSensitivity() }
+        button(nav, "◎ TREINO", red) { showTraining() }
 
         space(rootLayout, 18)
         section("RESUMO DO DISPOSITIVO")
@@ -176,7 +176,7 @@ class MainActivity : Activity() {
         val scroll = ScrollView(this)
         val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(18), dp(22), dp(18), dp(18)); setBackgroundColor(bg) }
         scroll.addView(col); setContentView(scroll)
-        text(col, "PMT FF PRO", 25, Color.WHITE, true)
+        text(col, "PMT FF PRO", 27, Color.WHITE, true)
         text(col, title, 14, blue, true)
         space(col, 16)
         button(col, "← VOLTAR AO INÍCIO", red) { showHome() }
